@@ -1,25 +1,16 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import Map from "./components/Map";
+import {ZONES, CONFLICTING_ZONES} from "./components/Map/constants";
 
 function App() {
   return (
-    <div className="App">
+    <>
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>Map</h1>
       </header>
-    </div>
+
+      <Map zones={ZONES} conflictingZones={CONFLICTING_ZONES} />
+    </>
   );
 }
 

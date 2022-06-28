@@ -18,6 +18,7 @@ const Map = (): JSX.Element => {
     initMap,
     drawingTool,
     zones,
+    deleteZoneByIndex,
     activeZone,
     saveActiveZone,
     cancelActiveZone,
@@ -42,7 +43,10 @@ const Map = (): JSX.Element => {
           </Styles.MenuWrapper>
 
           <Styles.MenuWrapper>
-            <ZonesMenuOverlay zones={zones} />
+            <ZonesMenuOverlay
+              zones={zones}
+              deleteZoneByIndex={deleteZoneByIndex}
+            />
           </Styles.MenuWrapper>
         </Styles.MapMenusWrapper>
       </Styles.MapContainer>

@@ -1,5 +1,5 @@
 import React from "react";
-import { FaPen, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 
 import { ZoneDTO } from "../../dtos";
 
@@ -7,13 +7,18 @@ import * as Styles from "./styles";
 
 interface ZonesMenuOverlayProps {
   zones: ZoneDTO[];
+  deleteZoneByIndex: (index: number) => void;
 }
 
 const ZonesMenuOverlay = ({
   zones,
+  deleteZoneByIndex,
 }: ZonesMenuOverlayProps): JSX.Element | null => {
-  const onEditZone = (zone: ZoneDTO) => {};
-  const onDeleteZone = (zone: ZoneDTO) => {};
+  const onDeleteZone = (zone: ZoneDTO, zoneIndex: number) => {
+    zone.shapeData[zone.shapeType]?.setMap(null);
+    
+    deleteZoneByIndex(zoneIndex);
+  };
 
   if (!zones.length) {
     return null;
@@ -30,11 +35,7 @@ const ZonesMenuOverlay = ({
             <Styles.ZoneTitle>{zone.name}</Styles.ZoneTitle>
 
             <Styles.ControlButtonsWrapper>
-              <Styles.ZoneControlButton onClick={() => onEditZone(zone)}>
-                <FaPen size={22} />
-              </Styles.ZoneControlButton>
-
-              <Styles.ZoneControlButton onClick={() => onDeleteZone(zone)}>
+              <Styles.ZoneControlButton onClick={() => onDeleteZone(zone, zoneIndex)}>
                 <FaTimes size={22} />
               </Styles.ZoneControlButton>
             </Styles.ControlButtonsWrapper>

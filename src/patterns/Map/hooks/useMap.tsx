@@ -1,13 +1,7 @@
 import React from "react";
 import { MiddlewareModalHandles } from "../../../components/MiddlewareModal";
 import { DEFAULT_MAPS_OPTIONS, DEFAULT_SHAPE_OPTIONS } from "../constants";
-import {
-  DrawingToolProps,
-  ShapeDataProps,
-  ZoneDTO,
-  ShapeTypes,
-  UpdateSelectedZoneShapeDTO,
-} from "../dtos";
+import { DrawingToolProps, ShapeDataProps, ZoneDTO, ShapeTypes } from "../dtos";
 import { generateZoneMetadata } from "../utils";
 
 interface UseMapProps {
@@ -29,27 +23,8 @@ const useMap = ({
 
   const [activeDrawnwingTool, setActiveDrawnwingTool] =
     React.useState<ShapeTypes | null>(null);
-  const [zones, setZones] = React.useState(defaultZones);
+  const [zones, setZones] = React.useState<ZoneDTO[]>([]);
   const [activeZone, setActiveZone] = React.useState<ZoneDTO | null>(null);
-
-  const updateSelectedZoneShape = React.useCallback(
-    ({
-      type,
-      shapeData,
-    }: UpdateSelectedZoneShapeDTO) => {
-      setActiveZone(
-        (state) =>
-          state && {
-            ...state,
-            shapeData: {
-              ...state.shapeData,
-              [type]: shapeData,
-            },
-          }
-      );
-    },
-    []
-  );
 
   const setShape = React.useMemo(
     () => ({
@@ -62,22 +37,7 @@ const useMap = ({
           ...circleProps,
           fillColor: color,
           strokeColor: color,
-        });
-
-        const listeners = ["radius_changed", "center_changed"];
-
-        listeners.forEach((listener) => {
-          circle.addListener(listener, () => {
-            const shapeData = {
-              polygon: null,
-              circle,
-            };
-
-            updateSelectedZoneShape({
-              type: "circle",
-              shapeData,
-            });
-          });
+          map: mapComponentRef.current || undefined,
         });
 
         return circle;
@@ -93,26 +53,10 @@ const useMap = ({
           strokeColor: color,
         });
 
-        const listeners = ["insert_at", "remove_at", "set_at"];
-
-        listeners.forEach((listener) => {
-          polygon.addListener(listener, () => {
-            const shapeData = {
-              polygon,
-              circle: null,
-            };
-
-            updateSelectedZoneShape({
-              type: "polygon",
-              shapeData,
-            });
-          });
-        });
-
         return polygon;
       },
     }),
-    [updateSelectedZoneShape]
+    []
   );
 
   const drawingTool: DrawingToolProps = React.useMemo(
@@ -156,7 +100,7 @@ const useMap = ({
   );
 
   const createDefaultZones = React.useCallback(() => {
-    zones.forEach((zone) => {
+    const zonesData = defaultZones.map((zone) => {
       const { shapeType, shapeData } = zone;
       const currentShapeData = shapeData[shapeType] as google.maps.Circle &
         google.maps.Polygon;
@@ -165,10 +109,16 @@ const useMap = ({
         currentShapeData && setShape[shapeType](currentShapeData);
 
       newZone?.setMap(mapComponentRef.current);
-    });
-  }, [setShape, zones]);
 
-  const createDefaultConflictZones = React.useCallback(() => {
+      return {
+        ...zone,
+        shapeData: {
+          ...zone.shapeData,
+          [zone.shapeType]: newZone,
+        },
+      };
+    });
+
     conflictingZones.forEach((zone) => {
       const { shapeType, shapeData } = zone;
       const currentShapeData = shapeData[shapeType] as google.maps.Circle &
@@ -179,7 +129,9 @@ const useMap = ({
 
       newZone?.setMap(mapComponentRef.current);
     });
-  }, [conflictingZones, setShape]);
+
+    setZones(zonesData);
+  }, [conflictingZones, defaultZones, setShape]);
 
   const eventHandle = React.useMemo(
     () => ({
@@ -245,6 +197,27 @@ const useMap = ({
     }
   }, [eventHandle, newZoneModalref]);
 
+  const deleteZoneByIndex = React.useCallback((index: number) => {
+    setZones((state) => {
+      state.forEach((zone) => {
+        console.log(zone.shapeData);
+
+        zone.shapeData[zone.shapeType]?.setMap(null);
+      });
+
+      const copyOfZones = [...state];
+
+      copyOfZones.splice(index, 1);
+
+      copyOfZones.forEach((zone) => {
+        zone.shapeData[zone.shapeType]?.setMap(mapComponentRef.current);
+      });
+
+      console.log("copyOfZones", copyOfZones);
+      return copyOfZones;
+    });
+  }, []);
+
   const initMap = React.useCallback(() => {
     console.count("Map render");
 
@@ -254,10 +227,7 @@ const useMap = ({
       throw new Error(`HTML element id "${mapId}" not founded`);
     }
 
-    mapComponentRef.current = new google.maps.Map(
-      mapElement,
-      DEFAULT_MAPS_OPTIONS
-    );
+    const initialMap = new google.maps.Map(mapElement, DEFAULT_MAPS_OPTIONS);
 
     drawingManagerRef.current = new google.maps.drawing.DrawingManager({
       drawingControl: false,
@@ -274,16 +244,17 @@ const useMap = ({
 
     drawingManagerRef.current.setMap(mapComponentRef.current);
 
+    mapComponentRef.current = initialMap;
+
     createDefaultZones();
-    createDefaultConflictZones();
     addDrawingManagerListener();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [addDrawingManagerListener, createDefaultZones, mapId]);
 
   return {
     initMap,
     drawingTool,
     zones,
+    deleteZoneByIndex,
     activeZone,
     saveActiveZone,
     cancelActiveZone,

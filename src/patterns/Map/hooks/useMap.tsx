@@ -242,7 +242,7 @@ const useMap = ({
       polygonOptions: { ...DEFAULT_SHAPE_OPTIONS },
     });
 
-    drawingManagerRef.current.setMap(mapComponentRef.current);
+    drawingManagerRef.current.setMap(initialMap);
 
     mapComponentRef.current = initialMap;
 

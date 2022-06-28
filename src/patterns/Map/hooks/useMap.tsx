@@ -200,8 +200,6 @@ const useMap = ({
   const deleteZoneByIndex = React.useCallback((index: number) => {
     setZones((state) => {
       state.forEach((zone) => {
-        console.log(zone.shapeData);
-
         zone.shapeData[zone.shapeType]?.setMap(null);
       });
 
@@ -213,7 +211,6 @@ const useMap = ({
         zone.shapeData[zone.shapeType]?.setMap(mapComponentRef.current);
       });
 
-      console.log("copyOfZones", copyOfZones);
       return copyOfZones;
     });
   }, []);

@@ -53,7 +53,7 @@ const Map = (): JSX.Element => {
 
       <MiddlewareModal
         ref={middlewareRef}
-        onCloseModal={() => console.log("console.log")}
+        showCloseButton={false}
       >
         <Styles.NewZoneForm>
           <input defaultValue={activeZone?.name} />

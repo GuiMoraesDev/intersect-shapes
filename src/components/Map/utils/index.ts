@@ -1,4 +1,11 @@
-import { CircleZoneDTO, PolygonZoneDTO } from "../dtos";
+import chroma from "chroma-js";
+
+import {
+  CircleZoneDTO,
+  PartialZoneDTO,
+  PolygonZoneDTO,
+  ZoneDTO,
+} from "../dtos";
 
 export const getShapeCircle = (circleShape: any): CircleZoneDTO => ({
   center: {
@@ -8,8 +15,8 @@ export const getShapeCircle = (circleShape: any): CircleZoneDTO => ({
   radius: circleShape.radius,
 });
 
-export const getShapePolygon = (mapShape: any): PolygonZoneDTO => {
-  const vertices = mapShape.getPath();
+export const getShapePolygon = (polygonShape: any): PolygonZoneDTO => {
+  const vertices = polygonShape.getPath();
 
   const latLongs = [];
 
@@ -23,4 +30,23 @@ export const getShapePolygon = (mapShape: any): PolygonZoneDTO => {
   }
 
   return latLongs;
+};
+
+export const generateZoneMetadata = (zoneData?: PartialZoneDTO) => {
+  const defaultZoneMetadata: ZoneDTO = {
+    color: String(chroma.random()),
+    name: "New zone",
+    shapeType: "circle",
+    shapeData: {
+      circle: null,
+      polygon: null,
+    },
+  };
+
+  const newZone: ZoneDTO = {
+    ...defaultZoneMetadata,
+    ...zoneData,
+  };
+
+  return newZone;
 };

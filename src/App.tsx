@@ -1,6 +1,5 @@
 import React from "react";
 import Map from "./components/Map";
-import {ZONES, CONFLICTING_ZONES} from "./components/Map/constants";
 
 function App() {
   return (
@@ -9,7 +8,7 @@ function App() {
         <h1>Map</h1>
       </header>
 
-      <Map zones={ZONES} conflictingZones={CONFLICTING_ZONES} />
+      <Map />
     </>
   );
 }

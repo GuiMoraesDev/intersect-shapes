@@ -11,17 +11,30 @@ export type PolygonZoneDTO = Array<{
   lng: number;
 }>;
 
-type ShapeTypes = "circle" | "polygon";
+export type ShapeTypes = "circle" | "polygon";
 
-interface ShapeDataProps {
+export interface ShapeDataProps {
   circle: CircleZoneDTO | null;
   polygon: PolygonZoneDTO | null;
 }
 
 export interface ZoneDTO {
-  id: number;
   color: string;
   name: string;
   shapeType: ShapeTypes;
   shapeData: ShapeDataProps;
+}
+
+export type PartialZoneDTO = {
+  [P in keyof ZoneDTO]?: ZoneDTO[P];
+};
+
+export interface ZonesProps extends ZoneDTO {
+  makeEditable(value: boolean): void;
+  removeShape(): void;
+}
+
+export interface DrawingToolProps {
+  circle: (activeZone: ZoneDTO) => void;
+  polygon: (activeZone: ZoneDTO) => void;
 }

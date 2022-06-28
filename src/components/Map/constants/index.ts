@@ -2,7 +2,6 @@ import { ZoneDTO } from "../dtos";
 
 export const ZONES: ZoneDTO[] = [
   {
-    id: 1,
     color: "red",
     name: "Zone 1",
     shapeType: "circle",
@@ -18,7 +17,6 @@ export const ZONES: ZoneDTO[] = [
 
 export const CONFLICTING_ZONES: ZoneDTO[] = [
   {
-    id: 2,
     color: "blue",
     name: "Zone 2",
     shapeType: "polygon",

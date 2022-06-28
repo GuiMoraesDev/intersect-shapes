@@ -14,8 +14,8 @@ export type PolygonZoneDTO = Array<{
 export type ShapeTypes = "circle" | "polygon";
 
 export interface ShapeDataProps {
-  circle: CircleZoneDTO | null;
-  polygon: PolygonZoneDTO | null;
+  circle: google.maps.Circle | null;
+  polygon: google.maps.Polygon | null;
 }
 
 export interface ZoneDTO {
@@ -25,16 +25,14 @@ export interface ZoneDTO {
   shapeData: ShapeDataProps;
 }
 
-export type PartialZoneDTO = {
-  [P in keyof ZoneDTO]?: ZoneDTO[P];
-};
-
-export interface ZonesProps extends ZoneDTO {
-  makeEditable(value: boolean): void;
-  removeShape(): void;
-}
-
 export interface DrawingToolProps {
+  state: ShapeTypes | null;
   circle: (activeZone: ZoneDTO) => void;
   polygon: (activeZone: ZoneDTO) => void;
+  clear: () => void;
+}
+
+export interface UpdateSelectedZoneShapeDTO {
+  type: ShapeTypes;
+  shapeData: ShapeDataProps;
 }

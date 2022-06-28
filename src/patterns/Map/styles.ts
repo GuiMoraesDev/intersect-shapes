@@ -43,3 +43,5 @@ export const MenuWrapper = styled.div`
 
   background-color: #fff;
 `;
+
+export const NewZoneForm = styled.form``;

@@ -14,16 +14,11 @@ interface DrawnMenuOverlayProps {
 const DrawnMenuOverlay = ({
   drawingTool,
 }: DrawnMenuOverlayProps): JSX.Element => {
-  const [activeDrawnwingTool, setActiveDrawnwingTool] =
-    React.useState<ShapeTypes | null>(null);
-
   const onChangeDrawingTool = React.useCallback(
     (type: ShapeTypes) => {
       const newZoneMetadata = generateZoneMetadata();
 
       drawingTool[type](newZoneMetadata);
-
-      setActiveDrawnwingTool(type);
     },
     [drawingTool]
   );
@@ -37,14 +32,14 @@ const DrawnMenuOverlay = ({
         <Styles.Button
           type="button"
           onClick={() => onChangeDrawingTool("circle")}
-          isActive={activeDrawnwingTool === "circle"}
+          isActive={drawingTool.state === "circle"}
         >
           Draw circle <FaPlusCircle />
         </Styles.Button>
         <Styles.Button
           type="button"
           onClick={() => onChangeDrawingTool("polygon")}
-          isActive={activeDrawnwingTool === "polygon"}
+          isActive={drawingTool.state === "polygon"}
         >
           Draw polygon <FaDrawPolygon />
         </Styles.Button>

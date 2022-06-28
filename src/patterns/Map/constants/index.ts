@@ -6,10 +6,10 @@ export const ZONES: ZoneDTO[] = [
     name: "Zone 1",
     shapeType: "circle",
     shapeData: {
-      circle: {
+      circle: new google.maps.Circle({
         center: { lat: -22.490246684, lng: -54.304961177 },
         radius: 1671913.2,
-      },
+      }),
       polygon: null,
     },
   },
@@ -22,12 +22,13 @@ export const CONFLICTING_ZONES: ZoneDTO[] = [
     shapeType: "polygon",
     shapeData: {
       circle: null,
-      polygon: [
+      polygon: new google.maps.Polygon({
+        paths: [
         { lat: 36.571747488, lng: 21.0515805 },
         { lat: 16.436471719, lng: 64.46954925 },
         { lat: -13.442660162, lng: -6.19451325 },
         { lat: 36.571747488, lng: 21.0515805 },
-      ],
+      ]}),
     },
   },
 ];

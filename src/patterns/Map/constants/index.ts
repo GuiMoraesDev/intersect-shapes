@@ -2,7 +2,7 @@ import { ZoneDTO } from "../dtos";
 
 export const ZONES: ZoneDTO[] = [
   {
-    color: "red",
+    color: "blue",
     name: "Zone 1",
     shapeType: "circle",
     shapeData: {
@@ -34,9 +34,8 @@ export const CONFLICTING_ZONES: ZoneDTO[] = [
 ];
 
 export const DEFAULT_SHAPE_OPTIONS = {
-  strokeWeight: 1,
+  strokeWeight: 3,
   zIndex: 1,
-  className: "",
 };
 
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
@@ -342,3 +341,8 @@ export const DEFAULT_MAPS_OPTIONS = {
     },
   },
 };
+
+export const DEFAULT_SHAPE_METADATA = {
+  circle: null,
+  polygon: null,
+}

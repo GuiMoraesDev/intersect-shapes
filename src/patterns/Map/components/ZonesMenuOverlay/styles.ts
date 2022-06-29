@@ -36,6 +36,35 @@ export const ZoneItem = styled.li`
   }
 `;
 
+interface ColorIndicatorProps {
+  color: string;
+}
+
+export const ColorIndicator = styled.span<ColorIndicatorProps>`
+  position: relative;
+
+  width: 10px;
+  height: 10px;
+
+  :before {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 500px;
+
+    background-color: ${({ color }) => color};
+
+    transform: translateY(-50%);
+  }
+`;
+
 export const ZoneTitle = styled.p``;
 
 export const ControlButtonsWrapper = styled.div`

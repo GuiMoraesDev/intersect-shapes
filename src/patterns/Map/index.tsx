@@ -10,6 +10,7 @@ import DrawnMenuOverlay from "./components/DrawnMenuOverlay";
 import MiddlewareModal, {
   MiddlewareModalHandles,
 } from "../../components/MiddlewareModal";
+import NewZoneForm from "./components/NewZoneForm";
 
 const Map = (): JSX.Element => {
   const middlewareRef = React.useRef<MiddlewareModalHandles>(null);
@@ -49,23 +50,15 @@ const Map = (): JSX.Element => {
             />
           </Styles.MenuWrapper>
         </Styles.MapMenusWrapper>
+        
+        <MiddlewareModal ref={middlewareRef} showCloseButton={false}>
+          <NewZoneForm
+            name={activeZone?.name}
+            saveActiveZone={saveActiveZone}
+            cancelActiveZone={cancelActiveZone}
+          />
+        </MiddlewareModal>
       </Styles.MapContainer>
-
-      <MiddlewareModal
-        ref={middlewareRef}
-        showCloseButton={false}
-      >
-        <Styles.NewZoneForm>
-          <input defaultValue={activeZone?.name} />
-
-          <button type="button" onClick={cancelActiveZone}>
-            cancel
-          </button>
-          <button type="button" onClick={saveActiveZone}>
-            save
-          </button>
-        </Styles.NewZoneForm>
-      </MiddlewareModal>
     </>
   );
 };

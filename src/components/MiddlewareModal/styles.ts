@@ -1,6 +1,4 @@
-import styled, { css } from "styled-components";
-
-import { MiddlewareModalDefaultPropsThatMakeStyles } from ".";
+import styled from "styled-components";
 
 export const Container = styled.div`
   position: absolute;
@@ -30,8 +28,8 @@ export const Container = styled.div`
   }
 `;
 
-export const ContentWrapper = styled.div<MiddlewareModalDefaultPropsThatMakeStyles>`
-  position: fixed;
+export const ContentWrapper = styled.div`
+  position: absolute;
   top: 50%;
   left: 50%;
 
@@ -40,9 +38,6 @@ export const ContentWrapper = styled.div<MiddlewareModalDefaultPropsThatMakeStyl
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-
-  width: fit-content;
-  height: fit-content;
 
   margin: auto;
   padding: 10px;
@@ -55,33 +50,7 @@ export const ContentWrapper = styled.div<MiddlewareModalDefaultPropsThatMakeStyl
 
   transform: translate(-50%, -50%);
 
-  overflow: auto;
-
-  ${({ dimension }) => {
-    if (dimension === "sm")
-      return css`
-        max-width: 35vw;
-        max-height: 46vh;
-      `;
-
-    if (dimension === "md")
-      return css`
-        max-width: 45vw;
-        max-height: 56vh;
-      `;
-
-    if (dimension === "lg")
-      return css`
-        max-width: 65vw;
-        max-height: 76vh;
-      `;
-
-    if (dimension === "full-size")
-      return css`
-        max-width: 85vw;
-        max-height: 96vh;
-      `;
-  }}
+  overflow: hidden;
 `;
 
 export const CloseTopButton = styled.button`

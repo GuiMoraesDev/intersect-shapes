@@ -1,18 +1,23 @@
 import chroma from "chroma-js";
+import { DEFAULT_SHAPE_METADATA } from "../constants";
 
 import { ShapeDataProps, ZoneDTO } from "../dtos";
 
-export const generateZoneMetadata = (shapeData?: ShapeDataProps): ZoneDTO => {
+export function generateZoneMetadata(
+  shapeData?: ShapeDataProps,
+  color?: string
+): ZoneDTO {
+  console.log('shapeData', shapeData);
+
   const zoneMetadata: ZoneDTO = {
-    color: String(chroma.random()),
+    color: color || String(chroma.random()),
     name: "New zone",
     shapeType: "circle",
     shapeData: {
-      circle: null,
-      polygon: null,
+      ...DEFAULT_SHAPE_METADATA,
       ...shapeData,
     },
   };
 
   return zoneMetadata;
-};
+}

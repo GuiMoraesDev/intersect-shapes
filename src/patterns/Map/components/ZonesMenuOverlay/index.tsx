@@ -16,7 +16,7 @@ const ZonesMenuOverlay = ({
 }: ZonesMenuOverlayProps): JSX.Element | null => {
   const onDeleteZone = (zone: ZoneDTO, zoneIndex: number) => {
     zone.shapeData[zone.shapeType]?.setMap(null);
-    
+
     deleteZoneByIndex(zoneIndex);
   };
 
@@ -32,10 +32,13 @@ const ZonesMenuOverlay = ({
       <Styles.ZonesListWrapper>
         {zones?.map((zone, zoneIndex) => (
           <Styles.ZoneItem key={`zone-buttons_${zone.name}_${zoneIndex}`}>
+            <Styles.ColorIndicator color={zone.color} />
             <Styles.ZoneTitle>{zone.name}</Styles.ZoneTitle>
 
             <Styles.ControlButtonsWrapper>
-              <Styles.ZoneControlButton onClick={() => onDeleteZone(zone, zoneIndex)}>
+              <Styles.ZoneControlButton
+                onClick={() => onDeleteZone(zone, zoneIndex)}
+              >
                 <FaTimes size={22} />
               </Styles.ZoneControlButton>
             </Styles.ControlButtonsWrapper>

@@ -1,7 +1,12 @@
 import React from "react";
 import { MiddlewareModalHandles } from "../../../components/MiddlewareModal";
-import { DEFAULT_MAPS_OPTIONS, DEFAULT_SHAPE_OPTIONS } from "../constants";
-import { DrawingToolProps, ShapeDataProps, ZoneDTO, ShapeTypes } from "../dtos";
+import { NewZoneFormSchemaProps } from "../components/NewZoneForm/validations";
+import {
+  DEFAULT_MAPS_OPTIONS,
+  DEFAULT_SHAPE_METADATA,
+  DEFAULT_SHAPE_OPTIONS,
+} from "../constants";
+import { DrawingToolProps, ZoneDTO, ShapeTypes } from "../dtos";
 import { generateZoneMetadata } from "../utils";
 
 interface UseMapProps {
@@ -30,13 +35,15 @@ const useMap = ({
     () => ({
       circle: (
         circleProps: google.maps.Circle,
-        color?: string
+        color?: string,
+        isConflictingZone: boolean = false
       ): google.maps.Circle => {
         const circle = new google.maps.Circle({
           ...DEFAULT_SHAPE_OPTIONS,
           ...circleProps,
-          fillColor: color,
-          strokeColor: color,
+          fillColor: isConflictingZone ? "red" : color,
+          strokeColor: isConflictingZone ? "red" : undefined,
+          fillOpacity: isConflictingZone ? 0.8 : undefined,
           map: mapComponentRef.current || undefined,
         });
 
@@ -44,13 +51,16 @@ const useMap = ({
       },
       polygon: (
         polygonProps: google.maps.Polygon,
-        color?: string
+        color?: string,
+        isConflictingZone: boolean = false
       ): google.maps.Polygon => {
         const polygon = new google.maps.Polygon({
           ...DEFAULT_SHAPE_OPTIONS,
           ...polygonProps,
-          fillColor: color,
-          strokeColor: color,
+          fillColor: isConflictingZone ? "red" : color,
+          strokeColor: isConflictingZone ? "red" : undefined,
+          fillOpacity: isConflictingZone ? 0.8 : undefined,
+          map: mapComponentRef.current || undefined,
         });
 
         return polygon;
@@ -99,14 +109,48 @@ const useMap = ({
     [activeDrawnwingTool]
   );
 
+  const overlayListener = React.useCallback(
+    (event: any) => {
+      const shapeOverlay = event.overlay;
+      const shapeColor = shapeOverlay.fillColor;
+
+      const eventType = event.type as keyof typeof setShape;
+
+      const shapeData = {
+        ...DEFAULT_SHAPE_METADATA,
+        [eventType]: setShape[eventType](shapeOverlay, shapeColor),
+      };
+
+      const shapeMetadata = generateZoneMetadata(shapeData, shapeColor);
+
+      setActiveZone(shapeMetadata);
+
+      newZoneModalref.current?.openModal();
+
+      drawingManagerRef.current?.setDrawingMode(null);
+    },
+    [newZoneModalref, setShape]
+  );
+
+  const addDrawingManagerListener = React.useCallback(() => {
+    if (!drawingManagerRef.current) return;
+
+    google.maps.event.addListener(
+      drawingManagerRef.current,
+      "overlaycomplete",
+      (event) => overlayListener(event)
+    );
+  }, [overlayListener]);
+
   const createDefaultZones = React.useCallback(() => {
     const zonesData = defaultZones.map((zone) => {
-      const { shapeType, shapeData } = zone;
+      const { shapeType, shapeData, color } = zone;
+
       const currentShapeData = shapeData[shapeType] as google.maps.Circle &
         google.maps.Polygon;
 
       const newZone: google.maps.Circle | google.maps.Polygon | null =
-        currentShapeData && setShape[shapeType](currentShapeData);
+        currentShapeData && setShape[shapeType](currentShapeData, color);
 
       newZone?.setMap(mapComponentRef.current);
 
@@ -125,43 +169,28 @@ const useMap = ({
         google.maps.Polygon;
 
       const newZone: google.maps.Circle | google.maps.Polygon | null =
-        currentShapeData && setShape[shapeType](currentShapeData, "#b81b1b");
+        currentShapeData &&
+        setShape[shapeType](currentShapeData, "#b81b1b", true);
 
       newZone?.setMap(mapComponentRef.current);
     });
 
     setZones(zonesData);
-  }, [conflictingZones, defaultZones, setShape]);
 
-  const eventHandle = React.useMemo(
-    () => ({
-      circle: (shapeOverlay: google.maps.Circle): ShapeDataProps => {
-        const newShape = {
-          polygon: null,
-          circle: shapeOverlay,
-        };
+    addDrawingManagerListener();
+  }, [addDrawingManagerListener, conflictingZones, defaultZones, setShape]);
 
-        return newShape;
-      },
-      polygon: (shapeOverlay: google.maps.Polygon): ShapeDataProps => {
-        const newShape = {
-          circle: null,
-          polygon: shapeOverlay,
-        };
+  const saveActiveZone = React.useCallback(
+    (values: NewZoneFormSchemaProps) => {
+      if (activeZone)
+        setZones((state) => [...state, { ...activeZone, ...values }]);
 
-        return newShape;
-      },
-    }),
-    []
+      newZoneModalref.current?.closeModal();
+
+      drawingTool.clear();
+    },
+    [activeZone, drawingTool, newZoneModalref]
   );
-
-  const saveActiveZone = React.useCallback(() => {
-    if (activeZone) setZones((state) => [...state, activeZone]);
-
-    newZoneModalref.current?.closeModal();
-
-    drawingTool.clear();
-  }, [activeZone, drawingTool, newZoneModalref]);
 
   const cancelActiveZone = React.useCallback(() => {
     activeZone?.shapeData[activeZone.shapeType]?.setMap(null);
@@ -171,31 +200,6 @@ const useMap = ({
     newZoneModalref.current?.closeModal();
     drawingTool.clear();
   }, [activeZone, drawingTool, newZoneModalref]);
-
-  const addDrawingManagerListener = React.useCallback(() => {
-    if (drawingManagerRef.current) {
-      google.maps.event.addListener(
-        drawingManagerRef.current,
-        "overlaycomplete",
-        (event) => {
-          const shapeOverlay = event.overlay;
-
-          const eventType = event.type as keyof typeof eventHandle;
-
-          const shapeData: ShapeDataProps =
-            eventHandle[eventType](shapeOverlay);
-
-          const shapeMetadata = generateZoneMetadata(shapeData);
-
-          setActiveZone(shapeMetadata);
-
-          newZoneModalref.current?.openModal();
-
-          drawingManagerRef.current?.setDrawingMode(null);
-        }
-      );
-    }
-  }, [eventHandle, newZoneModalref]);
 
   const deleteZoneByIndex = React.useCallback((index: number) => {
     setZones((state) => {
@@ -216,8 +220,6 @@ const useMap = ({
   }, []);
 
   const initMap = React.useCallback(() => {
-    console.count("Map render");
-
     const mapElement = document.getElementById(mapId);
 
     if (!mapElement) {
@@ -235,17 +237,17 @@ const useMap = ({
           google.maps.drawing.OverlayType.POLYGON,
         ],
       },
-      circleOptions: { ...DEFAULT_SHAPE_OPTIONS },
-      polygonOptions: { ...DEFAULT_SHAPE_OPTIONS },
+      circleOptions: DEFAULT_SHAPE_OPTIONS,
+      polygonOptions: DEFAULT_SHAPE_OPTIONS,
+      map: initialMap,
     });
-
-    drawingManagerRef.current.setMap(initialMap);
 
     mapComponentRef.current = initialMap;
 
     createDefaultZones();
-    addDrawingManagerListener();
-  }, [addDrawingManagerListener, createDefaultZones, mapId]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapId]);
 
   return {
     initMap,

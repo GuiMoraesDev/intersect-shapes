@@ -31,7 +31,8 @@ const Map = (): JSX.Element => {
 
   React.useEffect(() => {
     initMap();
-  }, [initMap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -50,7 +51,7 @@ const Map = (): JSX.Element => {
             />
           </Styles.MenuWrapper>
         </Styles.MapMenusWrapper>
-        
+
         <MiddlewareModal ref={middlewareRef} showCloseButton={false}>
           <NewZoneForm
             name={activeZone?.name}

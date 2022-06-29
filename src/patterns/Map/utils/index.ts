@@ -7,12 +7,10 @@ export function generateZoneMetadata(
   shapeData?: ShapeDataProps,
   color?: string
 ): ZoneDTO {
-  console.log('shapeData', shapeData);
-
   const zoneMetadata: ZoneDTO = {
     color: color || String(chroma.random()),
     name: "New zone",
-    shapeType: "circle",
+    shapeType: shapeData?.circle ? "circle" : "polygon",
     shapeData: {
       ...DEFAULT_SHAPE_METADATA,
       ...shapeData,

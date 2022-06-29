@@ -38,8 +38,9 @@ const useMap = ({
         color?: string,
         isConflictingZone: boolean = false
       ): google.maps.Circle => {
-        const circle = new google.maps.Circle({
-          ...circleProps,
+        const circle = circleProps;
+
+        circle.setOptions({
           ...DEFAULT_SHAPE_OPTIONS,
           fillColor: isConflictingZone ? "red" : color,
           strokeColor: isConflictingZone ? "red" : undefined,
@@ -54,8 +55,9 @@ const useMap = ({
         color?: string,
         isConflictingZone: boolean = false
       ): google.maps.Polygon => {
-        const polygon = new google.maps.Polygon({
-          ...polygonProps,
+        const polygon = polygonProps;
+
+        polygon.setOptions({
           ...DEFAULT_SHAPE_OPTIONS,
           fillColor: isConflictingZone ? "red" : color,
           strokeColor: isConflictingZone ? "red" : undefined,
@@ -109,40 +111,40 @@ const useMap = ({
     [activeDrawnwingTool]
   );
 
-  const overlayListener = React.useCallback(
-    (event: any) => {
-      const shapeOverlay = event.overlay;
-      const shapeColor = shapeOverlay.fillColor;
-
-      const eventType = event.type as keyof typeof setShape;
-
-      const shapeData = {
-        ...DEFAULT_SHAPE_METADATA,
-        [eventType]: setShape[eventType](shapeOverlay, shapeColor),
-      };
-
-      const shapeMetadata = generateZoneMetadata(shapeData, shapeColor);
-
-      setActiveZone(shapeMetadata);
-
-      newZoneModalref.current?.openModal();
-
-      drawingManagerRef.current?.setDrawingMode(null);
-    },
-    [newZoneModalref, setShape]
-  );
-
   const addDrawingManagerListener = React.useCallback(() => {
     if (!drawingManagerRef.current) return;
 
     google.maps.event.addListener(
       drawingManagerRef.current,
       "overlaycomplete",
-      (event) => overlayListener(event)
+      (event) => {
+        console.count("overlayListener");
+        drawingManagerRef.current?.setDrawingMode(null);
+
+        console.log("event", event);
+
+        const { overlay, type } = event;
+        const { fillColor } = overlay;
+
+        const eventType = type as keyof typeof setShape;
+
+        const shapeData = {
+          ...DEFAULT_SHAPE_METADATA,
+          [eventType]: setShape[eventType](overlay, fillColor),
+        };
+
+        const shapeMetadata = generateZoneMetadata(shapeData, fillColor);
+
+        setActiveZone(shapeMetadata);
+
+        newZoneModalref.current?.openModal();
+      }
     );
-  }, [overlayListener]);
+  }, [newZoneModalref, setShape]);
 
   const createDefaultZones = React.useCallback(() => {
+    console.count("createDefaultZones");
+
     const zonesData = defaultZones.map((zone) => {
       const { shapeType, shapeData, color } = zone;
 
@@ -182,8 +184,9 @@ const useMap = ({
 
   const saveActiveZone = React.useCallback(
     (values: NewZoneFormSchemaProps) => {
-      if (activeZone)
-        setZones((state) => [...state, { ...activeZone, ...values }]);
+      if (!activeZone) return;
+
+      setZones((state) => [...state, { ...activeZone, ...values }]);
 
       newZoneModalref.current?.closeModal();
 
@@ -193,7 +196,11 @@ const useMap = ({
   );
 
   const cancelActiveZone = React.useCallback(() => {
-    activeZone?.shapeData[activeZone.shapeType]?.setMap(null);
+    if (!activeZone) return;
+
+    const { shapeData, shapeType } = activeZone;
+
+    shapeData[shapeType]?.setMap(null);
 
     setActiveZone(null);
 
@@ -202,9 +209,13 @@ const useMap = ({
   }, [activeZone, drawingTool, newZoneModalref]);
 
   const deleteZoneByIndex = React.useCallback((index: number) => {
+    console.count("deleteZoneByIndex");
+
     setZones((state) => {
       state.forEach((zone) => {
-        zone.shapeData[zone.shapeType]?.setMap(null);
+        const { shapeData, shapeType } = zone;
+
+        shapeData[shapeType]?.setMap(null);
       });
 
       const copyOfZones = [...state];
@@ -212,7 +223,9 @@ const useMap = ({
       copyOfZones.splice(index, 1);
 
       copyOfZones.forEach((zone) => {
-        zone.shapeData[zone.shapeType]?.setMap(mapComponentRef.current);
+        const { shapeData, shapeType } = zone;
+
+        shapeData[shapeType]?.setMap(mapComponentRef.current);
       });
 
       return copyOfZones;
@@ -248,6 +261,8 @@ const useMap = ({
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapId]);
+
+  console.log("zones", zones);
 
   return {
     initMap,

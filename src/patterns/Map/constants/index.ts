@@ -24,18 +24,22 @@ export const CONFLICTING_ZONES: ZoneDTO[] = [
       circle: null,
       polygon: new google.maps.Polygon({
         paths: [
-        { lat: 36.571747488, lng: 21.0515805 },
-        { lat: 16.436471719, lng: 64.46954925 },
-        { lat: -13.442660162, lng: -6.19451325 },
-        { lat: 36.571747488, lng: 21.0515805 },
-      ]}),
+          { lat: 36.571747488, lng: 21.0515805 },
+          { lat: 16.436471719, lng: 64.46954925 },
+          { lat: -13.442660162, lng: -6.19451325 },
+          { lat: 36.571747488, lng: 21.0515805 },
+        ],
+      }),
     },
   },
 ];
 
 export const DEFAULT_SHAPE_OPTIONS = {
-  strokeWeight: 3,
+  strokeWeight: 1,
   zIndex: 1,
+  clickable: false,
+  dragable: false,
+  editable: false,
 };
 
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
@@ -345,4 +349,4 @@ export const DEFAULT_MAPS_OPTIONS = {
 export const DEFAULT_SHAPE_METADATA = {
   circle: null,
   polygon: null,
-}
+};

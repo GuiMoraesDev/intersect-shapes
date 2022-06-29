@@ -39,8 +39,8 @@ const useMap = ({
         isConflictingZone: boolean = false
       ): google.maps.Circle => {
         const circle = new google.maps.Circle({
-          ...DEFAULT_SHAPE_OPTIONS,
           ...circleProps,
+          ...DEFAULT_SHAPE_OPTIONS,
           fillColor: isConflictingZone ? "red" : color,
           strokeColor: isConflictingZone ? "red" : undefined,
           fillOpacity: isConflictingZone ? 0.8 : undefined,
@@ -55,8 +55,8 @@ const useMap = ({
         isConflictingZone: boolean = false
       ): google.maps.Polygon => {
         const polygon = new google.maps.Polygon({
-          ...DEFAULT_SHAPE_OPTIONS,
           ...polygonProps,
+          ...DEFAULT_SHAPE_OPTIONS,
           fillColor: isConflictingZone ? "red" : color,
           strokeColor: isConflictingZone ? "red" : undefined,
           fillOpacity: isConflictingZone ? 0.8 : undefined,

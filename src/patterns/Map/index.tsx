@@ -16,7 +16,6 @@ const Map = (): JSX.Element => {
   const middlewareRef = React.useRef<MiddlewareModalHandles>(null);
 
   const {
-    initMap,
     drawingTool,
     zones,
     deleteZoneByIndex,
@@ -28,11 +27,6 @@ const Map = (): JSX.Element => {
     conflictingZones: CONFLICTING_ZONES,
     newZoneModalref: middlewareRef,
   });
-
-  React.useEffect(() => {
-    initMap();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <>

@@ -1,3 +1,4 @@
+import { Position } from "@turf/turf";
 import chroma from "chroma-js";
 import { DEFAULT_SHAPE_METADATA } from "../constants";
 
@@ -19,3 +20,17 @@ export function generateZoneMetadata(
 
   return zoneMetadata;
 }
+
+export const getPolygonShapeData = (
+  shape: google.maps.Polygon
+): Position[] => {
+  const shapePath = shape.getPath();
+
+  const pathArray = shapePath.getArray();
+
+  const parsedPaths = pathArray.map((path) => [path.lat(), path.lng()]);
+
+  const duplicateFirstPoint = [...parsedPaths, parsedPaths[0]];
+
+  return duplicateFirstPoint;
+};

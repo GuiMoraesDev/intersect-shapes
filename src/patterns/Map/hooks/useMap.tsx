@@ -1,4 +1,6 @@
 import React from "react";
+import * as turf from "@turf/turf";
+
 import { MiddlewareModalHandles } from "../../../components/MiddlewareModal";
 import { NewZoneFormSchemaProps } from "../components/NewZoneForm/validations";
 import {
@@ -7,7 +9,7 @@ import {
   DEFAULT_SHAPE_OPTIONS,
 } from "../constants";
 import { DrawingToolProps, ZoneDTO, ShapeTypes } from "../dtos";
-import { generateZoneMetadata } from "../utils";
+import { generateZoneMetadata, getPolygonShapeData } from "../utils";
 
 interface UseMapProps {
   defaultZones: ZoneDTO[];
@@ -111,36 +113,48 @@ const useMap = ({
     [activeDrawnwingTool]
   );
 
-  const addDrawingManagerListener = React.useCallback(() => {
-    if (!drawingManagerRef.current) return;
+  const validateZonesConflicts = React.useCallback(
+    (newShapeMetadata: ZoneDTO): boolean => {
+      const { shapeData, shapeType } = newShapeMetadata;
 
-    google.maps.event.addListener(
-      drawingManagerRef.current,
-      "overlaycomplete",
-      (event) => {
-        console.count("overlayListener");
-        drawingManagerRef.current?.setDrawingMode(null);
+      if (shapeType === "circle") return true;
 
-        console.log("event", event);
+      const newShapeData = shapeData[shapeType] as google.maps.Polygon;
 
-        const { overlay, type } = event;
-        const { fillColor } = overlay;
+      const newShapeFilledData = getPolygonShapeData(newShapeData);
 
-        const eventType = type as keyof typeof setShape;
+      const newPolygon = turf.polygon([newShapeFilledData]);
 
-        const shapeData = {
-          ...DEFAULT_SHAPE_METADATA,
-          [eventType]: setShape[eventType](overlay, fillColor),
-        };
+      const allZones = [...zones, ...conflictingZones];
 
-        const shapeMetadata = generateZoneMetadata(shapeData, fillColor);
+      const polygonZonesFiltered = allZones.filter((zone) => {
+        const { shapeType: zoneShapeType } = zone;
 
-        setActiveZone(shapeMetadata);
+        return zoneShapeType === "polygon";
+      });
 
-        newZoneModalref.current?.openModal();
+      const polygonZonesShapes = polygonZonesFiltered.map((zone) => {
+        const { shapeData: zoneShapeData, shapeType: zoneShapeType } = zone;
+
+        const zoneShape = zoneShapeData[zoneShapeType] as google.maps.Polygon;
+
+        const shapeFilledData = getPolygonShapeData(zoneShape);
+
+        return turf.polygon([shapeFilledData]);
+      });
+
+      const valuesWithIntersection = polygonZonesShapes.find((polygon) => {
+        return turf.intersect(newPolygon, polygon);
+      });
+
+      if (!!valuesWithIntersection) {
+        return true;
       }
-    );
-  }, [newZoneModalref, setShape]);
+
+      return false;
+    },
+    [conflictingZones, zones]
+  );
 
   const createDefaultZones = React.useCallback(() => {
     console.count("createDefaultZones");
@@ -178,9 +192,7 @@ const useMap = ({
     });
 
     setZones(zonesData);
-
-    addDrawingManagerListener();
-  }, [addDrawingManagerListener, conflictingZones, defaultZones, setShape]);
+  }, [conflictingZones, defaultZones, setShape]);
 
   const saveActiveZone = React.useCallback(
     (values: NewZoneFormSchemaProps) => {
@@ -232,7 +244,47 @@ const useMap = ({
     });
   }, []);
 
-  const initMap = React.useCallback(() => {
+  React.useEffect(() => {
+    if (!drawingManagerRef.current) return;
+
+    const listener = google.maps.event.addListener(
+      drawingManagerRef.current,
+      "overlaycomplete",
+      (event) => {
+        console.count("overlayListener");
+        drawingTool.clear();
+
+        const { overlay, type } = event;
+        const { fillColor } = overlay;
+
+        const eventType = type as keyof typeof setShape;
+
+        const shapeData = {
+          ...DEFAULT_SHAPE_METADATA,
+          [eventType]: setShape[eventType](overlay, fillColor),
+        };
+
+        const shapeMetadata = generateZoneMetadata(shapeData, fillColor);
+
+        const isInConflict = validateZonesConflicts(shapeMetadata);
+
+        if (isInConflict) {
+          return overlay.setMap(null);
+        }
+
+        setActiveZone(shapeMetadata);
+
+        newZoneModalref.current?.openModal();
+      }
+    );
+
+    return () => {
+      console.count("overlayRemoveListener");
+      google.maps.event.removeListener(listener);
+    };
+  }, [drawingTool, newZoneModalref, setShape, validateZonesConflicts]);
+
+  React.useEffect(() => {
     const mapElement = document.getElementById(mapId);
 
     if (!mapElement) {
@@ -262,10 +314,7 @@ const useMap = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapId]);
 
-  console.log("zones", zones);
-
   return {
-    initMap,
     drawingTool,
     zones,
     deleteZoneByIndex,

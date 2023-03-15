@@ -4,13 +4,29 @@ export const ZONES: ZoneDTO[] = [
   {
     color: "blue",
     name: "Zone 1",
+    shapeType: "polygon",
+    shapeData: {
+      polygon: new google.maps.Polygon({
+        paths: [
+          { lat: -53.28522, lng: -64.40793 },
+          { lat: -33.72419, lng: -13.50395 },
+          { lat: -37.55839, lng: -160.46649 },
+          { lat: -53.28522, lng: -64.40793 },
+        ],
+      }),
+      circle: null,
+    },
+  },
+  {
+    color: "gray",
+    name: "Zone 3",
     shapeType: "circle",
     shapeData: {
-      circle: new google.maps.Circle({
-        center: { lat: -22.490246684, lng: -54.304961177 },
-        radius: 1671913.2,
-      }),
       polygon: null,
+      circle: new google.maps.Circle({
+        center: { lat: 30.26712621251091, lng: -27.7347635 },
+        radius: 3259778.6201084265,
+      }),
     },
   },
 ];
@@ -21,7 +37,6 @@ export const CONFLICTING_ZONES: ZoneDTO[] = [
     name: "Zone 2",
     shapeType: "polygon",
     shapeData: {
-      circle: null,
       polygon: new google.maps.Polygon({
         paths: [
           { lat: 36.571747488, lng: 21.0515805 },
@@ -30,6 +45,7 @@ export const CONFLICTING_ZONES: ZoneDTO[] = [
           { lat: 36.571747488, lng: 21.0515805 },
         ],
       }),
+      circle: null,
     },
   },
 ];
@@ -347,6 +363,6 @@ export const DEFAULT_MAPS_OPTIONS = {
 };
 
 export const DEFAULT_SHAPE_METADATA = {
-  circle: null,
   polygon: null,
+  circle: null,
 };

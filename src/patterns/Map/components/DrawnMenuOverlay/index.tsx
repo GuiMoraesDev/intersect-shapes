@@ -1,6 +1,6 @@
 import React from "react";
 
-import { FaDrawPolygon, FaPlusCircle } from "react-icons/fa";
+import { FaDrawPolygon, FaRegDotCircle } from "react-icons/fa";
 
 import { DrawingToolProps, ShapeTypes } from "../../dtos";
 import { generateZoneMetadata } from "../../utils";
@@ -16,7 +16,7 @@ const DrawnMenuOverlay = ({
 }: DrawnMenuOverlayProps): JSX.Element => {
   const onChangeDrawingTool = React.useCallback(
     (type: ShapeTypes) => {
-      const newZoneMetadata = generateZoneMetadata();
+      const newZoneMetadata = generateZoneMetadata(type);
 
       drawingTool[type](newZoneMetadata);
     },
@@ -31,17 +31,18 @@ const DrawnMenuOverlay = ({
       <Styles.SwitchWrapper>
         <Styles.Button
           type="button"
-          onClick={() => onChangeDrawingTool("circle")}
-          isActive={drawingTool.state === "circle"}
-        >
-          Draw circle <FaPlusCircle />
-        </Styles.Button>
-        <Styles.Button
-          type="button"
           onClick={() => onChangeDrawingTool("polygon")}
           isActive={drawingTool.state === "polygon"}
         >
           Draw polygon <FaDrawPolygon />
+        </Styles.Button>
+
+        <Styles.Button
+          type="button"
+          onClick={() => onChangeDrawingTool("circle")}
+          isActive={drawingTool.state === "circle"}
+        >
+          Draw circle <FaRegDotCircle />
         </Styles.Button>
       </Styles.SwitchWrapper>
     </Styles.Container>

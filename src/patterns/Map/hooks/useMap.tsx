@@ -9,7 +9,12 @@ import {
   DEFAULT_SHAPE_OPTIONS,
 } from "../constants";
 import { DrawingToolProps, ZoneDTO, ShapeTypes } from "../dtos";
-import { generateZoneMetadata, getPolygonShapeData } from "../utils";
+import {
+  generateZoneMetadata,
+  getCircleShapeData,
+  getPolygonShapeData,
+} from "../utils";
+import { Feature, Polygon, Properties } from "@turf/turf";
 
 interface UseMapProps {
   defaultZones: ZoneDTO[];
@@ -35,23 +40,6 @@ const useMap = ({
 
   const setShape = React.useMemo(
     () => ({
-      circle: (
-        circleProps: google.maps.Circle,
-        color?: string,
-        isConflictingZone: boolean = false
-      ): google.maps.Circle => {
-        const circle = circleProps;
-
-        circle.setOptions({
-          ...DEFAULT_SHAPE_OPTIONS,
-          fillColor: isConflictingZone ? "red" : color,
-          strokeColor: isConflictingZone ? "red" : undefined,
-          fillOpacity: isConflictingZone ? 0.8 : undefined,
-          map: mapComponentRef.current || undefined,
-        });
-
-        return circle;
-      },
       polygon: (
         polygonProps: google.maps.Polygon,
         color?: string,
@@ -69,6 +57,25 @@ const useMap = ({
 
         return polygon;
       },
+      circle: (
+        circleProps: google.maps.Circle,
+        color?: string,
+        isConflictingZone: boolean = false
+      ): google.maps.Circle => {
+        const circle = circleProps;
+
+        console.log({ circle });
+
+        circle.setOptions({
+          ...DEFAULT_SHAPE_OPTIONS,
+          fillColor: isConflictingZone ? "red" : color,
+          strokeColor: isConflictingZone ? "red" : undefined,
+          fillOpacity: isConflictingZone ? 0.8 : undefined,
+          map: mapComponentRef.current || undefined,
+        });
+
+        return circle;
+      },
     }),
     []
   );
@@ -76,20 +83,6 @@ const useMap = ({
   const drawingTool: DrawingToolProps = React.useMemo(
     () => ({
       state: activeDrawnwingTool,
-      circle: (activeZone: ZoneDTO) => {
-        drawingManagerRef.current?.setOptions({
-          circleOptions: {
-            ...DEFAULT_SHAPE_OPTIONS,
-            fillColor: activeZone.color,
-          },
-        });
-
-        drawingManagerRef.current?.setDrawingMode(
-          google.maps.drawing.OverlayType.CIRCLE
-        );
-
-        setActiveDrawnwingTool("circle");
-      },
       polygon: (activeZone: ZoneDTO) => {
         drawingManagerRef.current?.setOptions({
           polygonOptions: {
@@ -104,6 +97,20 @@ const useMap = ({
 
         setActiveDrawnwingTool("polygon");
       },
+      circle: (activeZone: ZoneDTO) => {
+        drawingManagerRef.current?.setOptions({
+          circleOptions: {
+            ...DEFAULT_SHAPE_OPTIONS,
+            fillColor: activeZone.color,
+          },
+        });
+
+        drawingManagerRef.current?.setDrawingMode(
+          google.maps.drawing.OverlayType.CIRCLE
+        );
+
+        setActiveDrawnwingTool("circle");
+      },
       clear: () => {
         drawingManagerRef.current?.setDrawingMode(null);
 
@@ -117,34 +124,71 @@ const useMap = ({
     (newShapeMetadata: ZoneDTO): boolean => {
       const { shapeData, shapeType } = newShapeMetadata;
 
-      if (shapeType === "circle") return true;
+      const newShapeData = shapeData[shapeType];
 
-      const newShapeData = shapeData[shapeType] as google.maps.Polygon;
+      let newPolygon: Feature<Polygon, Properties>;
 
-      const newShapeFilledData = getPolygonShapeData(newShapeData);
+      if (shapeType === "circle") {
+        const newShapeFilledData = getCircleShapeData(
+          newShapeData as google.maps.Circle
+        );
 
-      const newPolygon = turf.polygon([newShapeFilledData]);
+        newPolygon = turf.circle(
+          newShapeFilledData.center,
+          newShapeFilledData.radius / 1000
+        );
+      } else {
+        const newShapeFilledData = getPolygonShapeData(
+          newShapeData as google.maps.Polygon
+        );
+
+        newPolygon = turf.polygon([newShapeFilledData]);
+      }
+
+      console.log(newPolygon);
 
       const allZones = [...zones, ...conflictingZones];
 
-      const polygonZonesFiltered = allZones.filter((zone) => {
-        const { shapeType: zoneShapeType } = zone;
-
-        return zoneShapeType === "polygon";
-      });
-
-      const polygonZonesShapes = polygonZonesFiltered.map((zone) => {
+      const polygonZonesShapes = allZones.map((zone) => {
         const { shapeData: zoneShapeData, shapeType: zoneShapeType } = zone;
 
-        const zoneShape = zoneShapeData[zoneShapeType] as google.maps.Polygon;
+        const zoneShape = zoneShapeData[zoneShapeType];
 
-        const shapeFilledData = getPolygonShapeData(zoneShape);
+        console.log(zoneShapeType);
 
-        return turf.polygon([shapeFilledData]);
+        let shapeFilledData: Feature<Polygon, Properties>;
+
+        if (zoneShapeType === "circle") {
+          const newShapeFilledData = getCircleShapeData(
+            zoneShape as google.maps.Circle
+          );
+
+          shapeFilledData = turf.circle(
+            newShapeFilledData.center,
+            newShapeFilledData.radius / 1000
+          );
+
+          console.log({ newShapeFilledData });
+        } else {
+          const newShapeFilledData = getPolygonShapeData(
+            zoneShape as google.maps.Polygon
+          );
+
+          shapeFilledData = turf.polygon([newShapeFilledData]);
+        }
+        console.log({ shapeFilledData });
+
+        return shapeFilledData;
       });
 
       const valuesWithIntersection = polygonZonesShapes.find((polygon) => {
-        return turf.intersect(newPolygon, polygon);
+        const isIntersecting = turf.intersect(newPolygon, polygon);
+
+        if (isIntersecting) {
+          console.log({ newPolygon, polygonZonesShapes });
+        }
+
+        return isIntersecting;
       });
 
       if (!!valuesWithIntersection) {
@@ -162,11 +206,15 @@ const useMap = ({
     const zonesData = defaultZones.map((zone) => {
       const { shapeType, shapeData, color } = zone;
 
-      const currentShapeData = shapeData[shapeType] as google.maps.Circle &
-        google.maps.Polygon;
+      const currentShapeData = shapeData[shapeType];
 
-      const newZone: google.maps.Circle | google.maps.Polygon | null =
-        currentShapeData && setShape[shapeType](currentShapeData, color);
+      const newZone = currentShapeData
+        ? shapeType === "polygon"
+          ? setShape[shapeType](currentShapeData as google.maps.Polygon, color)
+          : setShape[shapeType](currentShapeData as google.maps.Circle, color)
+        : null;
+
+      console.log(newZone, mapComponentRef.current);
 
       newZone?.setMap(mapComponentRef.current);
 
@@ -181,12 +229,21 @@ const useMap = ({
 
     conflictingZones.forEach((zone) => {
       const { shapeType, shapeData } = zone;
-      const currentShapeData = shapeData[shapeType] as google.maps.Circle &
-        google.maps.Polygon;
+      const currentShapeData = shapeData[shapeType];
 
-      const newZone: google.maps.Circle | google.maps.Polygon | null =
-        currentShapeData &&
-        setShape[shapeType](currentShapeData, "#b81b1b", true);
+      const newZone = currentShapeData
+        ? shapeType === "polygon"
+          ? setShape[shapeType](
+              currentShapeData as google.maps.Polygon,
+              "#b81b1b",
+              true
+            )
+          : setShape[shapeType](
+              currentShapeData as google.maps.Circle,
+              "#b81b1b",
+              true
+            )
+        : null;
 
       newZone?.setMap(mapComponentRef.current);
     });
@@ -264,7 +321,11 @@ const useMap = ({
           [eventType]: setShape[eventType](overlay, fillColor),
         };
 
-        const shapeMetadata = generateZoneMetadata(shapeData, fillColor);
+        const shapeMetadata = generateZoneMetadata(
+          eventType,
+          shapeData,
+          fillColor
+        );
 
         const isInConflict = validateZonesConflicts(shapeMetadata);
 
@@ -297,12 +358,8 @@ const useMap = ({
       drawingControl: false,
       drawingControlOptions: {
         position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [
-          google.maps.drawing.OverlayType.CIRCLE,
-          google.maps.drawing.OverlayType.POLYGON,
-        ],
+        drawingModes: [google.maps.drawing.OverlayType.POLYGON],
       },
-      circleOptions: DEFAULT_SHAPE_OPTIONS,
       polygonOptions: DEFAULT_SHAPE_OPTIONS,
       map: initialMap,
     });

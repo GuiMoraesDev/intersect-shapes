@@ -1,22 +1,14 @@
-export interface CircleZoneDTO {
-  center: {
-    lat: number;
-    lng: number;
-  };
-  radius: number;
-}
-
 export type PolygonZoneDTO = Array<{
   lat: number;
   lng: number;
 }>;
 
-export type ShapeTypes = "circle" | "polygon";
-
 export interface ShapeDataProps {
-  circle: google.maps.Circle | null;
   polygon: google.maps.Polygon | null;
+  circle: google.maps.Circle | null;
 }
+
+export type ShapeTypes = keyof ShapeDataProps;
 
 export interface ZoneDTO {
   color: string;
@@ -27,8 +19,8 @@ export interface ZoneDTO {
 
 export interface DrawingToolProps {
   state: ShapeTypes | null;
-  circle: (activeZone: ZoneDTO) => void;
   polygon: (activeZone: ZoneDTO) => void;
+  circle: (activeZone: ZoneDTO) => void;
   clear: () => void;
 }
 

@@ -7,7 +7,7 @@ export const MapContainer = styled.div`
   align-items: center;
   justify-content: center;
 
-  height: 60vh;
+  height: 100vh;
   max-height: 800px;
 `;
 
